@@ -13,7 +13,7 @@ type PurchaseOrder = {
 };
 
 async function getPurchaseOrders(): Promise<PurchaseOrder[]> {
-  const res = await fetch("http://localhost:3000/api/purchase-orders", {
+  const res = await fetch(`${process.env.NEXT_PUBLIC_APP_URL}/api/purchase-orders`, {
     cache: "no-store",
   });
 

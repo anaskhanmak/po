@@ -2,7 +2,7 @@ import PurchaseOrderPreview from "@/components/purchase-order/PurchaseOrderPrevi
 
 async function getPurchaseOrder(id: string) {
   const res = await fetch(
-    `http://localhost:3000/api/purchase-orders/${id}`,
+    `${process.env.NEXT_PUBLIC_APP_URL}/api/purchase-orders/${id}`,
     {
       cache: "no-store",
     }
