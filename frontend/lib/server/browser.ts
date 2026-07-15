@@ -13,7 +13,7 @@ export async function getBrowser() {
   // Vercel Production
   return puppeteerCore.launch({
     args: chromium.args,
-    defaultViewport: chromium.defaultViewport,
+    // defaultViewport: chromium.defaultViewport,
     executablePath: await chromium.executablePath(),
     headless: true,
   });
