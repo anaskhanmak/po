@@ -22,15 +22,29 @@ export interface PurchaseOrderItem {
 }
 
 export interface PurchaseOrderFormData {
-  poNo: string;
+  id?: string;          
+  poNo?: string;        
   date: string;
-
+  status: PurchaseOrderStatus;
   customer: Customer;
   supplier: Supplier;
 
   items: PurchaseOrderItem[];
 
-  paymentTerms: string[];
+  paymentTerms?: string[];
 
-  signature: string;
+  signature?: string;     
+}
+
+export type PurchaseOrderStatus =
+  | "Draft"
+  | "Approved"
+  | "Sent"
+  | "Cancelled";
+
+
+export interface PurchaseOrder extends PurchaseOrderFormData {
+  id: string;
+  poNo: string;
+  createdAt: string;
 }

@@ -30,6 +30,7 @@ export async function POST(req: Request) {
   const purchaseOrder = {
     id: Date.now().toString(),
     poNo: `${lastPoNumber + 1}`,
+    status: body.status ?? "Draft",
     ...body,
     createdAt: new Date().toISOString(),
   };

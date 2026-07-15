@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { getBrowser } from "@/lib/server/browser";
+import { readPurchaseOrders } from "@/lib/server/purchase-order";
 
 interface Params {
   params: Promise<{
@@ -19,7 +20,7 @@ export async function GET(req: Request, { params }: Params) {
       `${process.env.NEXT_PUBLIC_APP_URL}/purchase-orders/${id}/print`,
       {
         waitUntil: "networkidle0",
-      }
+      },
     );
 
     const pdf = await page.pdf({
@@ -34,10 +35,27 @@ export async function GET(req: Request, { params }: Params) {
       },
     });
 
+    const purchaseOrders = await readPurchaseOrders();
+
+    const purchaseOrder = purchaseOrders.find((po: any) => po.id === id);
+
+    if (!purchaseOrder) {
+      return NextResponse.json(
+        { message: "Purchase Order not found" },
+        { status: 404 },
+      );
+    }
+
+    const supplier = purchaseOrder.supplier.company
+      .trim()
+      .replace(/[^a-zA-Z0-9]/g, "-");
+
+    const fileName = `${supplier}-${purchaseOrder.poNo}.pdf`;
+
     return new NextResponse(Buffer.from(pdf), {
       headers: {
         "Content-Type": "application/pdf",
-        "Content-Disposition": `attachment; filename=PO-${id}.pdf`,
+        "Content-Disposition": `attachment; filename="${fileName}"`,
       },
     });
   } finally {

@@ -3,9 +3,16 @@
 import { useForm } from "react-hook-form";
 import ItemsTable from "./ItemsTable";
 import { PurchaseOrderFormData } from "@/types/purchase-order";
-import { createPurchaseOrder } from "@/lib/client/purchase-order";
+import { createPurchaseOrder, updatePurchaseOrder } from "@/lib/client/purchase-order";
+import { useEffect } from "react";
 
-export default function PurchaseOrderForm() {
+export default function PurchaseOrderForm({
+  initialData,
+  isEdit = false,
+}: {
+  initialData?: PurchaseOrderFormData;
+  isEdit?: boolean;
+}) {
   const {
     register,
     control,
@@ -13,9 +20,9 @@ export default function PurchaseOrderForm() {
     reset,
     formState: { errors, isSubmitting },
   } = useForm<PurchaseOrderFormData>({
-    defaultValues: {
+    defaultValues: initialData ?? {
       date: "",
-
+      status: "Draft",
       customer: {
         company: "",
         address: "",
@@ -43,40 +50,53 @@ export default function PurchaseOrderForm() {
     },
   });
 
+  useEffect(() => {
+  if (initialData) {
+    reset(initialData);
+  }
+}, [initialData, reset]);
+
   const onSubmit = async (data: PurchaseOrderFormData) => {
     try {
-      await createPurchaseOrder(data);
+      if (isEdit && initialData?.id) {
+        await updatePurchaseOrder(initialData.id, data);
 
-      alert("Purchase Order Saved Successfully");
+        alert("Purchase Order Updated Successfully");
+      } else {
+        await createPurchaseOrder(data);
 
-      reset({
-        date: "",
-        customer: {
-          company: "",
-          address: "",
-          email: "",
-          phone: "",
-          vatNumber: "",
-        },
-        supplier: {
-          company: "",
-          address: "",
-          email: "",
-          phone: "",
-        },
-        items: [
-          {
-            id: crypto.randomUUID(),
-            description: "",
-            quantity: "",
-            price: "",
-            amount: "",
+        alert("Purchase Order Saved Successfully");
+
+        reset({
+          date: "",
+          status: "Draft",
+          customer: {
+            company: "",
+            address: "",
+            email: "",
+            phone: "",
+            vatNumber: "",
           },
-        ],
-      });
+          supplier: {
+            company: "",
+            address: "",
+            email: "",
+            phone: "",
+          },
+          items: [
+            {
+              id: crypto.randomUUID(),
+              description: "",
+              quantity: "",
+              price: "",
+              amount: "",
+            },
+          ],
+        });
+      }
     } catch (error) {
       console.error(error);
-      alert("Failed to save Purchase Order");
+      alert("Something went wrong");
     }
   };
 
@@ -88,9 +108,7 @@ export default function PurchaseOrderForm() {
       {/* Purchase Order */}
 
       <div className="border border-black rounded-lg p-6">
-        <h2 className="text-xl font-bold mb-5">
-          Purchase Order Details
-        </h2>
+        <h2 className="text-xl font-bold mb-5">Purchase Order Details</h2>
 
         <div>
           <label>Date</label>
@@ -104,22 +122,30 @@ export default function PurchaseOrderForm() {
           />
 
           {errors.date && (
-            <p className="text-red-500! text-sm mt-1">
-              {errors.date.message}
-            </p>
+            <p className="text-red-500! text-sm mt-1">{errors.date.message}</p>
           )}
         </div>
+        <div>
+    <label>Status</label>
+
+    <select
+      {...register("status")}
+      className="border border-black rounded-lg w-full p-3 mt-2"
+    >
+      <option value="Draft">Draft</option>
+      <option value="Approved">Approved</option>
+      <option value="Sent">Sent</option>
+      <option value="Cancelled">Cancelled</option>
+    </select>
+  </div>
       </div>
 
       {/* Customer */}
 
       <div className="border border-black rounded-lg p-6">
-        <h2 className="text-xl font-bold mb-5">
-          Customer
-        </h2>
+        <h2 className="text-xl font-bold mb-5">Customer</h2>
 
         <div className="grid grid-cols-2 gap-5">
-
           <div>
             <input
               placeholder="Company"
@@ -193,19 +219,15 @@ export default function PurchaseOrderForm() {
               {errors.customer?.vatNumber?.message}
             </p>
           </div>
-
         </div>
       </div>
 
       {/* Supplier */}
 
       <div className="border border-black rounded-lg p-6">
-        <h2 className="text-xl font-bold mb-5">
-          Supplier
-        </h2>
+        <h2 className="text-xl font-bold mb-5">Supplier</h2>
 
         <div className="grid grid-cols-2 gap-5">
-
           <div>
             <input
               placeholder="Company"
@@ -265,21 +287,23 @@ export default function PurchaseOrderForm() {
               {errors.supplier?.phone?.message}
             </p>
           </div>
-
         </div>
       </div>
 
-      <ItemsTable
-        control={control}
-        register={register}
-      />
+      <ItemsTable control={control} register={register} />
 
       <button
         type="submit"
         disabled={isSubmitting}
         className="bg-black text-white! px-8 py-3 rounded-lg disabled:opacity-50"
       >
-        {isSubmitting ? "Saving..." : "Save Purchase Order"}
+        {isSubmitting
+          ? isEdit
+            ? "Updating..."
+            : "Saving..."
+          : isEdit
+            ? "Update Purchase Order"
+            : "Save Purchase Order"}
       </button>
     </form>
   );
